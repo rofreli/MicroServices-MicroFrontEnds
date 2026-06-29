@@ -1,0 +1,64 @@
+services:
+  oauth-api:
+    build:
+      context: ./backend
+      dockerfile: src/OAuth.API/Dockerfile
+    container_name: oauth-api
+    ports:
+      - "5001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      MongoDb__ConnectionString: mongodb://oauth-mongo:27017
+      MongoDb__DatabaseName: OAuthDb
+      Google__ClientId: ${GOOGLE_CLIENT_ID:-CONFIGURE_ME}
+      Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-CONFIGURE_ME}
+      OpenIddict__Seeder__SpaRedirectUris__0: http://localhost:3000/auth/callback
+      OpenIddict__Seeder__SpaPostLogoutUris__0: http://localhost:3000
+      Cors__Origins__0: http://localhost:3000
+      Cors__Origins__1: http://localhost:3002
+    depends_on:
+      oauth-mongo:
+        condition: service_healthy
+    networks:
+      - oauth-net
+      - bu-net
+    restart: unless-stopped
+
+  oauth-mongo:
+    image: mongo:7
+    container_name: oauth-mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - oauth-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - oauth-net
+    restart: unless-stopped
+
+  mfe-users:
+    build:
+      context: ./mfe-users
+      dockerfile: Dockerfile
+    container_name: oauth-mfe-users
+    ports:
+      - "3002:80"
+    networks:
+      - oauth-net
+      - bu-net
+    restart: unless-stopped
+
+volumes:
+  oauth-mongo-data:
+
+networks:
+  oauth-net:
+    driver: bridge
+    name: oauth-net
+  bu-net:
+    external: true
+    name: bu-net

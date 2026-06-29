@@ -1,0 +1,16 @@
+services:
+  shell:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: platform-shell
+    ports:
+      - "3000:80"
+    networks:
+      - bu-net
+    restart: unless-stopped
+
+networks:
+  bu-net:
+    external: true
+    name: bu-net

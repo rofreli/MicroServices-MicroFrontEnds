@@ -1,0 +1,60 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/BusinessUnits.API/Dockerfile
+    container_name: business-units-api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - MongoDb__ConnectionString=mongodb://mongo:27017
+      - MongoDb__DatabaseName=BusinessUnitsDb
+      - MongoDb__BusinessUnitsCollection=business_units
+      - Cors__Origins__0=http://localhost:3000
+      - Cors__Origins__1=http://localhost:3001
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - business-units-net
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: business-units-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - business-units-net
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: business-units-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - business-units-net
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+
+networks:
+  business-units-net:
+    driver: bridge

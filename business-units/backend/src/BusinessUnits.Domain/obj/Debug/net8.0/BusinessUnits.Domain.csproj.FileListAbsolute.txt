@@ -1,0 +1,11 @@
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/bin/Debug/net8.0/BusinessUnits.Domain.deps.json
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/bin/Debug/net8.0/BusinessUnits.Domain.dll
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/bin/Debug/net8.0/BusinessUnits.Domain.pdb
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/obj/Debug/net8.0/BusinessUnits.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/obj/Debug/net8.0/BusinessUnits.Domain.AssemblyInfoInputs.cache
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/obj/Debug/net8.0/BusinessUnits.Domain.AssemblyInfo.cs
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/obj/Debug/net8.0/BusinessUnits.Domain.csproj.CoreCompileInputs.cache
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/obj/Debug/net8.0/BusinessUnits.Domain.dll
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/obj/Debug/net8.0/refint/BusinessUnits.Domain.dll
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/obj/Debug/net8.0/BusinessUnits.Domain.pdb
+/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Domain/obj/Debug/net8.0/ref/BusinessUnits.Domain.dll

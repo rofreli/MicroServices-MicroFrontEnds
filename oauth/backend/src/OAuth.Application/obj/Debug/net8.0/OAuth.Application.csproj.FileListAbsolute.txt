@@ -1,0 +1,15 @@
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/bin/Debug/net8.0/OAuth.Application.deps.json
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/bin/Debug/net8.0/OAuth.Application.dll
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/bin/Debug/net8.0/OAuth.Application.pdb
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/bin/Debug/net8.0/OAuth.Domain.dll
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/bin/Debug/net8.0/OAuth.Domain.pdb
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/OAuth.Application.csproj.AssemblyReference.cache
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/OAuth.Application.GeneratedMSBuildEditorConfig.editorconfig
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/OAuth.Application.AssemblyInfoInputs.cache
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/OAuth.Application.AssemblyInfo.cs
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/OAuth.Application.csproj.CoreCompileInputs.cache
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/OAuth.Ap.62E4C2AC.Up2Date
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/OAuth.Application.dll
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/refint/OAuth.Application.dll
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/OAuth.Application.pdb
+/home/rodrigo/pessoal/repos/oauth/backend/src/OAuth.Application/obj/Debug/net8.0/ref/OAuth.Application.dll

@@ -1,0 +1,161 @@
+services:
+
+  # ── Shell ──────────────────────────────────────────────────────────────────
+  shell:
+    build:
+      context: ./shell
+      dockerfile: Dockerfile
+      args:
+        VITE_MFE_BUSINESS_UNITS_URL: http://localhost:3001
+        VITE_MFE_USERS_URL: http://localhost:3002
+        VITE_OAUTH_URL: http://localhost:5001
+    container_name: platform-shell
+    ports:
+      - "3000:80"
+    depends_on:
+      - mfe-business-units
+      - mfe-users
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  # ── Business Units ─────────────────────────────────────────────────────────
+  business-units-api:
+    build:
+      context: ./business-units/backend
+      dockerfile: src/BusinessUnits.API/Dockerfile
+    container_name: business-units-api
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      MongoDb__ConnectionString: mongodb://business-units-mongo:27017
+      MongoDb__DatabaseName: BusinessUnitsDb
+      Cors__Origins__0: http://localhost:3000
+      Cors__Origins__1: http://localhost:3001
+    depends_on:
+      business-units-mongo:
+        condition: service_healthy
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  business-units-mongo:
+    image: mongo:7
+    container_name: business-units-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - bu-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  business-units-mongo-express:
+    image: mongo-express:latest
+    container_name: business-units-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: business-units-mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    depends_on:
+      business-units-mongo:
+        condition: service_healthy
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  mfe-business-units:
+    build:
+      context: ./business-units/mfe-business-units
+      dockerfile: Dockerfile
+    container_name: bu-mfe-business-units
+    ports:
+      - "3001:80"
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  # ── OAuth ──────────────────────────────────────────────────────────────────
+  oauth-api:
+    build:
+      context: ./oauth/backend
+      dockerfile: src/OAuth.API/Dockerfile
+    container_name: oauth-api
+    ports:
+      - "5001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      MongoDb__ConnectionString: mongodb://oauth-mongo:27017
+      MongoDb__DatabaseName: OAuthDb
+      Google__ClientId: ${GOOGLE_CLIENT_ID:-CONFIGURE_ME}
+      Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-CONFIGURE_ME}
+      OpenIddict__Seeder__SpaRedirectUris__0: http://localhost:3000/auth/callback
+      OpenIddict__Seeder__SpaPostLogoutUris__0: http://localhost:3000
+      Cors__Origins__0: http://localhost:3000
+      Cors__Origins__1: http://localhost:3002
+    depends_on:
+      oauth-mongo:
+        condition: service_healthy
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  oauth-mongo:
+    image: mongo:7
+    container_name: oauth-mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - oauth-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  oauth-mongo-express:
+    image: mongo-express:latest
+    container_name: oauth-mongo-express
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: oauth-mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    depends_on:
+      oauth-mongo:
+        condition: service_healthy
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  mfe-users:
+    build:
+      context: ./oauth/mfe-users
+      dockerfile: Dockerfile
+    container_name: oauth-mfe-users
+    ports:
+      - "3002:80"
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+volumes:
+  bu-mongo-data:
+  oauth-mongo-data:
+
+networks:
+  platform-net:
+    driver: bridge
+    name: platform-net
