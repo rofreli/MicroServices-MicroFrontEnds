@@ -1,5 +1,0 @@
-/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Infrastructure/obj/Debug/net8.0/BusinessUnits.Infrastructure.csproj.AssemblyReference.cache
-/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Infrastructure/obj/Debug/net8.0/BusinessUnits.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
-/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Infrastructure/obj/Debug/net8.0/BusinessUnits.Infrastructure.AssemblyInfoInputs.cache
-/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Infrastructure/obj/Debug/net8.0/BusinessUnits.Infrastructure.AssemblyInfo.cs
-/home/rodrigo/pessoal/repos/business-units/backend/src/BusinessUnits.Infrastructure/obj/Debug/net8.0/BusinessUnits.Infrastructure.csproj.CoreCompileInputs.cache
