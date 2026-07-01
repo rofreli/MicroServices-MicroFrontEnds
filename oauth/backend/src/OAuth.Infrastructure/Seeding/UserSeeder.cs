@@ -37,14 +37,12 @@ public class UserSeeder : IHostedService
             }
 
             var hash = passwordHasher.Hash(seed.Password);
-            var user = User.Create(seed.Email, seed.FirstName, seed.LastName, hash);
-
-            foreach (var role in seed.Roles)
-                user.AddRole(role);
+            var user = User.Create(seed.Email, seed.FirstName, seed.LastName, hash, seed.IsSuperAdmin);
 
             await userRepository.AddAsync(user, ct);
-            _logger.LogInformation("Seed user {Email} created with roles: {Roles}.",
-                seed.Email, string.Join(", ", seed.Roles));
+            _logger.LogInformation(
+                "Seed user {Email} created (superAdmin={IsSuperAdmin}).",
+                seed.Email, seed.IsSuperAdmin);
         }
     }
 
@@ -62,5 +60,5 @@ public class SeedUserEntry
     public string Password { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
-    public List<string> Roles { get; set; } = new();
+    public bool IsSuperAdmin { get; set; } = false;
 }

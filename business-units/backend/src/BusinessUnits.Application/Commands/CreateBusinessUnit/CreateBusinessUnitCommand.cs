@@ -4,6 +4,7 @@ using MediatR;
 namespace BusinessUnits.Application.Commands.CreateBusinessUnit;
 
 public record CreateBusinessUnitCommand(
+    string BusinessId,
     string RazaoSocial,
     string NomeFantasia,
     string Cnpj,

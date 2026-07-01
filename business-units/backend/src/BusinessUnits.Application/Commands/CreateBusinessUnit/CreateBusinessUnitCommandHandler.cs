@@ -10,17 +10,25 @@ namespace BusinessUnits.Application.Commands.CreateBusinessUnit;
 public class CreateBusinessUnitCommandHandler : IRequestHandler<CreateBusinessUnitCommand, BusinessUnitDto>
 {
     private readonly IBusinessUnitRepository _repository;
+    private readonly IBusinessRepository _businessRepository;
     private readonly IMapper _mapper;
 
-    public CreateBusinessUnitCommandHandler(IBusinessUnitRepository repository, IMapper mapper)
-        => (_repository, _mapper) = (repository, mapper);
+    public CreateBusinessUnitCommandHandler(
+        IBusinessUnitRepository repository,
+        IBusinessRepository businessRepository,
+        IMapper mapper)
+        => (_repository, _businessRepository, _mapper) = (repository, businessRepository, mapper);
 
     public async Task<BusinessUnitDto> Handle(CreateBusinessUnitCommand request, CancellationToken ct)
     {
+        if (!await _businessRepository.ExistsByIdAsync(request.BusinessId, ct))
+            throw new NotFoundException("Business", request.BusinessId);
+
         if (await _repository.ExistsByCnpjAsync(request.Cnpj, ct))
             throw new DomainException($"A business unit with CNPJ '{request.Cnpj}' already exists.");
 
-        var businessUnit = BusinessUnit.Create(request.RazaoSocial, request.NomeFantasia, request.Cnpj);
+        var businessUnit = BusinessUnit.Create(
+            request.BusinessId, request.RazaoSocial, request.NomeFantasia, request.Cnpj);
 
         if (request.Address is not null)
         {

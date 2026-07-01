@@ -21,8 +21,8 @@ public class GetAllBusinessUnitsQueryHandler
         var page = Math.Max(1, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
 
-        var items = await _repository.GetAllAsync(page, pageSize, ct);
-        var total = await _repository.CountAsync(ct);
+        var items = await _repository.GetAllAsync(page, pageSize, request.BusinessId, ct);
+        var total = await _repository.CountAsync(request.BusinessId, ct);
 
         return new PaginatedResult<BusinessUnitSummaryDto>(
             items.Select(_mapper.Map<BusinessUnitSummaryDto>).ToList(),

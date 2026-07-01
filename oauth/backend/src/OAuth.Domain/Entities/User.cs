@@ -11,7 +11,7 @@ public class ExternalProvider
 
 public class User
 {
-    private readonly List<string> _roles = new();
+    private readonly List<Permission> _permissions = new();
     private readonly List<ExternalProvider> _externalProviders = new();
 
     public string Id { get; private set; } = string.Empty;
@@ -20,17 +20,23 @@ public class User
     public string LastName { get; private set; } = string.Empty;
     public string? PasswordHash { get; private set; }
     public bool IsActive { get; private set; }
+    public bool IsSuperAdmin { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-    public IReadOnlyList<string> Roles => _roles.AsReadOnly();
+    public IReadOnlyList<Permission> Permissions => _permissions.AsReadOnly();
     public IReadOnlyList<ExternalProvider> ExternalProviders => _externalProviders.AsReadOnly();
 
     public string FullName => $"{FirstName} {LastName}".Trim();
 
     private User() { }
 
-    public static User Create(string email, string firstName, string lastName, string? passwordHash = null)
+    public static User Create(
+        string email,
+        string firstName,
+        string lastName,
+        string? passwordHash = null,
+        bool isSuperAdmin = false)
     {
         return new User
         {
@@ -39,6 +45,7 @@ public class User
             FirstName = firstName,
             LastName = lastName,
             PasswordHash = passwordHash,
+            IsSuperAdmin = isSuperAdmin,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
         };
@@ -80,20 +87,28 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AddRole(string role)
+    public void AddPermission(Permission permission)
     {
-        if (string.IsNullOrWhiteSpace(role)) throw new DomainException("Role cannot be empty.");
-        var normalized = role.Trim().ToUpperInvariant();
-        if (_roles.Contains(normalized)) throw new ConflictException($"User already has role '{role}'.");
-        _roles.Add(normalized);
+        // Replace existing permission for the same scope if any
+        var existing = _permissions.FirstOrDefault(p =>
+            p.Matches(permission.BusinessId, permission.BusinessUnitId,
+                      permission.Module, permission.Function));
+        if (existing is not null)
+            _permissions.Remove(existing);
+
+        _permissions.Add(permission);
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RemoveRole(string role)
+    public void RemovePermission(
+        string businessId, string? businessUnitId, string module, string? function)
     {
-        var normalized = role.Trim().ToUpperInvariant();
-        if (!_roles.Remove(normalized))
-            throw new NotFoundException("Role", role);
+        var permission = _permissions.FirstOrDefault(p =>
+            p.Matches(businessId, businessUnitId, module, function))
+            ?? throw new NotFoundException("Permission",
+               $"{businessId}/{businessUnitId ?? "*"}/{module}/{function ?? "*"}");
+
+        _permissions.Remove(permission);
         UpdatedAt = DateTime.UtcNow;
     }
 

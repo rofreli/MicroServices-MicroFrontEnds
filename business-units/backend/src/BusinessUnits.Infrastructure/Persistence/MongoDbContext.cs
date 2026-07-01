@@ -19,13 +19,24 @@ public class MongoDbContext
         EnsureIndexes();
     }
 
+    public IMongoCollection<Business> Businesses =>
+        _database.GetCollection<Business>(_settings.BusinessesCollection);
+
     public IMongoCollection<BusinessUnit> BusinessUnits =>
         _database.GetCollection<BusinessUnit>(_settings.BusinessUnitsCollection);
 
     private void EnsureIndexes()
     {
-        var indexKeys = Builders<BusinessUnit>.IndexKeys.Ascending("Cnpj");
-        var indexOptions = new CreateIndexOptions { Unique = true, Name = "idx_cnpj_unique" };
-        BusinessUnits.Indexes.CreateOne(new CreateIndexModel<BusinessUnit>(indexKeys, indexOptions));
+        Businesses.Indexes.CreateOne(new CreateIndexModel<Business>(
+            Builders<Business>.IndexKeys.Ascending("Cnpj"),
+            new CreateIndexOptions { Unique = true, Name = "idx_business_cnpj_unique" }));
+
+        BusinessUnits.Indexes.CreateOne(new CreateIndexModel<BusinessUnit>(
+            Builders<BusinessUnit>.IndexKeys.Ascending("Cnpj"),
+            new CreateIndexOptions { Unique = true, Name = "idx_bu_cnpj_unique" }));
+
+        BusinessUnits.Indexes.CreateOne(new CreateIndexModel<BusinessUnit>(
+            Builders<BusinessUnit>.IndexKeys.Ascending(x => x.BusinessId),
+            new CreateIndexOptions { Name = "idx_bu_business_id" }));
     }
 }

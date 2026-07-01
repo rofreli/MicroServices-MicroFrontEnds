@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -106,14 +107,23 @@ public class AccountController : Controller
 
     private async Task SignInWithCookieAsync(DomainUser user)
     {
+        var permissionsJson = JsonSerializer.Serialize(
+            user.Permissions.Select(p => new {
+                businessId = p.BusinessId,
+                businessUnitId = p.BusinessUnitId,
+                module = p.Module,
+                function = p.Function,
+                role = p.Role
+            }));
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Email, user.Email.Value),
             new(ClaimTypes.Name, user.FullName),
+            new("is_super_admin", user.IsSuperAdmin.ToString().ToLowerInvariant()),
+            new("permissions", permissionsJson),
         };
-        foreach (var role in user.Roles)
-            claims.Add(new Claim(ClaimTypes.Role, role));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(

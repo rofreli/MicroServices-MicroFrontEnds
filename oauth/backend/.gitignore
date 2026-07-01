@@ -1,0 +1,25 @@
+# .NET build artifacts
+bin/
+obj/
+.vs/
+*.user
+*.nupkg
+*.snupkg
+TestResults/
+publish/
+*.pubxml
+*.publishsettings
+*.coverage
+
+# Environment-specific config (may contain secrets or local paths)
+# appsettings.json (base) IS tracked
+**/appsettings.*.json
+**/secrets.json
+**/Properties/launchSettings.json
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.ionide/

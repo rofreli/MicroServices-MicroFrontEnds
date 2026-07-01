@@ -11,6 +11,7 @@ public class BusinessUnitMappingProfile : Profile
         CreateMap<BusinessUnit, BusinessUnitDto>()
             .ConstructUsing((src, ctx) => new BusinessUnitDto(
                 src.Id,
+                src.BusinessId,
                 src.RazaoSocial,
                 src.NomeFantasia,
                 src.Cnpj.Value,
@@ -23,6 +24,7 @@ public class BusinessUnitMappingProfile : Profile
         CreateMap<BusinessUnit, BusinessUnitSummaryDto>()
             .ConstructUsing(src => new BusinessUnitSummaryDto(
                 src.Id,
+                src.BusinessId,
                 src.RazaoSocial,
                 src.NomeFantasia,
                 src.Cnpj.Value,

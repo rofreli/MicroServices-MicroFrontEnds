@@ -7,7 +7,8 @@ public record UserDto(
     string LastName,
     string FullName,
     bool IsActive,
-    IReadOnlyList<string> Roles,
+    bool IsSuperAdmin,
+    IReadOnlyList<PermissionDto> Permissions,
     IReadOnlyList<string> ExternalProviders,
     DateTime CreatedAt,
     DateTime? UpdatedAt
@@ -18,6 +19,6 @@ public record UserSummaryDto(
     string Email,
     string FullName,
     bool IsActive,
-    IReadOnlyList<string> Roles,
+    bool IsSuperAdmin,
     DateTime CreatedAt
 );

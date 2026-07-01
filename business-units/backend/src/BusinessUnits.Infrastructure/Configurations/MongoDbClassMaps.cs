@@ -18,10 +18,24 @@ public static class MongoDbClassMaps
         {
             if (_registered) return;
 
+            BsonClassMap.RegisterClassMap<Business>(map =>
+            {
+                map.AutoMap();
+                map.MapIdMember(x => x.Id).SetIdGenerator(StringObjectIdGenerator.Instance);
+                map.MapMember(x => x.RazaoSocial);
+                map.MapMember(x => x.NomeFantasia);
+                map.MapMember(x => x.Cnpj).SetSerializer(new CnpjSerializer());
+                map.MapMember(x => x.IsActive);
+                map.MapMember(x => x.CreatedAt);
+                map.MapMember(x => x.UpdatedAt);
+                map.SetIgnoreExtraElements(true);
+            });
+
             BsonClassMap.RegisterClassMap<BusinessUnit>(map =>
             {
                 map.AutoMap();
                 map.MapIdMember(x => x.Id).SetIdGenerator(StringObjectIdGenerator.Instance);
+                map.MapMember(x => x.BusinessId);
                 map.MapMember(x => x.RazaoSocial);
                 map.MapMember(x => x.NomeFantasia);
                 map.MapMember(x => x.Cnpj).SetSerializer(new CnpjSerializer());

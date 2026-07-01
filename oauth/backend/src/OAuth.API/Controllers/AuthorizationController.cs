@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -54,7 +55,15 @@ public class AuthorizationController : Controller
                 .SetClaim(Claims.Name, user.FullName)
                 .SetClaim(Claims.GivenName, user.FirstName)
                 .SetClaim(Claims.FamilyName, user.LastName)
-                .SetClaims("roles", user.Roles.ToImmutableArray());
+                .SetClaim("is_super_admin", user.IsSuperAdmin.ToString().ToLowerInvariant())
+                .SetClaim("permissions", JsonSerializer.Serialize(
+                    user.Permissions.Select(p => new {
+                        businessId = p.BusinessId,
+                        businessUnitId = p.BusinessUnitId,
+                        module = p.Module,
+                        function = p.Function,
+                        role = p.Role
+                    })));
 
         identity.SetScopes(request.GetScopes());
 
@@ -98,7 +107,15 @@ public class AuthorizationController : Controller
         identity.SetClaim(Claims.Subject, user.Id)
                 .SetClaim(Claims.Email, user.Email.Value)
                 .SetClaim(Claims.Name, user.FullName)
-                .SetClaims("roles", user.Roles.ToImmutableArray());
+                .SetClaim("is_super_admin", user.IsSuperAdmin.ToString().ToLowerInvariant())
+                .SetClaim("permissions", JsonSerializer.Serialize(
+                    user.Permissions.Select(p => new {
+                        businessId = p.BusinessId,
+                        businessUnitId = p.BusinessUnitId,
+                        module = p.Module,
+                        function = p.Function,
+                        role = p.Role
+                    })));
 
         identity.SetDestinations(GetDestinations);
 
@@ -121,8 +138,15 @@ public class AuthorizationController : Controller
             [Claims.Name] = user.FullName,
             [Claims.GivenName] = user.FirstName,
             [Claims.FamilyName] = user.LastName,
-            ["roles"] = user.Roles,
             ["isActive"] = user.IsActive,
+            ["isSuperAdmin"] = user.IsSuperAdmin,
+            ["permissions"] = user.Permissions.Select(p => new {
+                businessId = p.BusinessId,
+                businessUnitId = p.BusinessUnitId,
+                module = p.Module,
+                function = p.Function,
+                role = p.Role
+            }),
         });
     }
 
@@ -139,7 +163,7 @@ public class AuthorizationController : Controller
     {
         return claim.Type switch
         {
-            Claims.Name or Claims.Email or "roles"
+            Claims.Name or Claims.Email or "permissions" or "is_super_admin"
                 => new[] { Destinations.AccessToken, Destinations.IdentityToken },
             _ => new[] { Destinations.AccessToken },
         };

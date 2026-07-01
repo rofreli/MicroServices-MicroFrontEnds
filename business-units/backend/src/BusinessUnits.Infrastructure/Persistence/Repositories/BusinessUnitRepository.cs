@@ -17,10 +17,14 @@ public class BusinessUnitRepository : IBusinessUnitRepository
     public async Task<BusinessUnit?> GetByCnpjAsync(string cnpj, CancellationToken ct = default)
         => await _collection.Find(x => x.Cnpj == new Domain.ValueObjects.Cnpj(cnpj)).FirstOrDefaultAsync(ct);
 
-    public async Task<IReadOnlyList<BusinessUnit>> GetAllAsync(int page, int pageSize, CancellationToken ct = default)
+    public async Task<IReadOnlyList<BusinessUnit>> GetAllAsync(int page, int pageSize, string? businessId = null, CancellationToken ct = default)
     {
+        var filter = businessId is null
+            ? Builders<BusinessUnit>.Filter.Empty
+            : Builders<BusinessUnit>.Filter.Eq(x => x.BusinessId, businessId);
+
         var result = await _collection
-            .Find(Builders<BusinessUnit>.Filter.Empty)
+            .Find(filter)
             .SortByDescending(x => x.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Limit(pageSize)
@@ -28,8 +32,13 @@ public class BusinessUnitRepository : IBusinessUnitRepository
         return result.AsReadOnly();
     }
 
-    public async Task<long> CountAsync(CancellationToken ct = default)
-        => await _collection.CountDocumentsAsync(Builders<BusinessUnit>.Filter.Empty, cancellationToken: ct);
+    public async Task<long> CountAsync(string? businessId = null, CancellationToken ct = default)
+    {
+        var filter = businessId is null
+            ? Builders<BusinessUnit>.Filter.Empty
+            : Builders<BusinessUnit>.Filter.Eq(x => x.BusinessId, businessId);
+        return await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
+    }
 
     public async Task AddAsync(BusinessUnit businessUnit, CancellationToken ct = default)
         => await _collection.InsertOneAsync(businessUnit, cancellationToken: ct);

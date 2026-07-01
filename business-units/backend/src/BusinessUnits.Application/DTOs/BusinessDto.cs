@@ -1,22 +1,20 @@
 namespace BusinessUnits.Application.DTOs;
 
-public record BusinessUnitDto(
+public record BusinessDto(
     string Id,
-    string BusinessId,
     string RazaoSocial,
     string NomeFantasia,
     string Cnpj,
-    AddressDto? Address,
-    IReadOnlyList<ContactDto> Contacts,
+    bool IsActive,
     DateTime CreatedAt,
     DateTime? UpdatedAt
 );
 
-public record BusinessUnitSummaryDto(
+public record BusinessSummaryDto(
     string Id,
-    string BusinessId,
     string RazaoSocial,
     string NomeFantasia,
     string Cnpj,
+    bool IsActive,
     DateTime CreatedAt
 );

@@ -7,6 +7,5 @@ public record CreateUserCommand(
     string Email,
     string FirstName,
     string LastName,
-    string Password,
-    IReadOnlyList<string>? Roles
+    string Password
 ) : IRequest<UserDto>;

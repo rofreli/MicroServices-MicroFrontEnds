@@ -13,6 +13,7 @@ public static class DependencyInjection
     {
         services.Configure<MongoDbSettings>(configuration.GetSection("MongoDb"));
         services.AddSingleton<MongoDbContext>();
+        services.AddScoped<IBusinessRepository, BusinessRepository>();
         services.AddScoped<IBusinessUnitRepository, BusinessUnitRepository>();
         return services;
     }

@@ -1,0 +1,102 @@
+# ══════════════════════════════════════════════════════════════════
+# OS & Editor
+# ══════════════════════════════════════════════════════════════════
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ══════════════════════════════════════════════════════════════════
+# IDE
+# ══════════════════════════════════════════════════════════════════
+.idea/
+.vscode/
+.ionide/
+*.suo
+*.ncrunch*
+*.sln.docstates
+*.userprefs
+
+# ══════════════════════════════════════════════════════════════════
+# .NET — Build artifacts
+# ══════════════════════════════════════════════════════════════════
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/*.nupkg
+**/*.snupkg
+**/TestResults/
+**/publish/
+**/*.pubxml
+**/*.publishsettings
+**/*.coverage
+
+# ══════════════════════════════════════════════════════════════════
+# .NET — Environment-specific config (may contain secrets/local paths)
+# appsettings.json (base) IS tracked — overrides are not
+# ══════════════════════════════════════════════════════════════════
+**/appsettings.*.json
+**/secrets.json
+**/Properties/launchSettings.json
+
+# ══════════════════════════════════════════════════════════════════
+# Node.js / npm
+# ══════════════════════════════════════════════════════════════════
+**/node_modules/
+**/.pnpm-store/
+**/.yarn/cache
+**/.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ══════════════════════════════════════════════════════════════════
+# Vite / TypeScript / Build output
+# ══════════════════════════════════════════════════════════════════
+**/dist/
+**/build/
+**/.vite/
+**/*.tsbuildinfo
+**/.eslintcache
+**/.stylelintcache
+
+# ══════════════════════════════════════════════════════════════════
+# Test coverage
+# ══════════════════════════════════════════════════════════════════
+**/coverage/
+**/.nyc_output/
+
+# ══════════════════════════════════════════════════════════════════
+# Environment variables & secrets
+# Never commit real secrets — use docker-compose env vars or .env.example
+# ══════════════════════════════════════════════════════════════════
+.env
+.env.*
+!.env.example
+!.env.template
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.template
+
+# ══════════════════════════════════════════════════════════════════
+# Logs
+# ══════════════════════════════════════════════════════════════════
+*.log
+logs/
+**/logs/
+
+# ══════════════════════════════════════════════════════════════════
+# Claude Code — local-only settings (machine-specific permissions)
+# .claude/settings.json (project-level) CAN be tracked if desired
+# ══════════════════════════════════════════════════════════════════
+.claude/settings.local.json

@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OAuth.Application.Commands.ActivateUser;
 using OAuth.Application.Commands.AddRole;
@@ -64,15 +63,39 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("{id}/roles")]
-    public async Task<IActionResult> AddRole(
-        string id, [FromBody] RoleRequest request, CancellationToken ct = default)
-        => Ok(await _mediator.Send(new AddRoleToUserCommand(id, request.Role), ct));
+    // ── Permissions ──────────────────────────────────────────────────────────
 
-    [HttpDelete("{id}/roles/{role}")]
-    public async Task<IActionResult> RemoveRole(
-        string id, string role, CancellationToken ct = default)
-        => Ok(await _mediator.Send(new RemoveRoleFromUserCommand(id, role), ct));
+    [HttpPost("{id}/permissions")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> AddPermission(
+        string id, [FromBody] AddPermissionRequest request, CancellationToken ct = default)
+        => Ok(await _mediator.Send(new AddPermissionToUserCommand(
+            id, request.BusinessId, request.BusinessUnitId,
+            request.Module, request.Function, request.Role), ct));
+
+    [HttpDelete("{id}/permissions")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemovePermission(
+        string id, [FromBody] RemovePermissionRequest request, CancellationToken ct = default)
+        => Ok(await _mediator.Send(new RemovePermissionFromUserCommand(
+            id, request.BusinessId, request.BusinessUnitId,
+            request.Module, request.Function), ct));
 }
 
-public record RoleRequest(string Role);
+public record AddPermissionRequest(
+    string BusinessId,
+    string? BusinessUnitId,
+    string Module,
+    string? Function,
+    string Role
+);
+
+public record RemovePermissionRequest(
+    string BusinessId,
+    string? BusinessUnitId,
+    string Module,
+    string? Function
+);

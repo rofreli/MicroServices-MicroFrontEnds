@@ -22,10 +22,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             throw new ConflictException($"User with email '{request.Email}' already exists.");
 
         var user = User.Create(request.Email, request.FirstName, request.LastName, _hasher.Hash(request.Password));
-
-        foreach (var role in request.Roles ?? [])
-            user.AddRole(role);
-
         await _repository.AddAsync(user, ct);
         return _mapper.Map<UserDto>(user);
     }

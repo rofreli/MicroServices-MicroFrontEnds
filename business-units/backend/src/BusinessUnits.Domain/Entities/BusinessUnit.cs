@@ -10,6 +10,7 @@ public class BusinessUnit
     private readonly List<Contact> _contacts = new();
 
     public string Id { get; private set; }
+    public string BusinessId { get; private set; } = string.Empty;
     public string RazaoSocial { get; private set; }
     public string NomeFantasia { get; private set; }
     public Cnpj Cnpj { get; private set; }
@@ -22,11 +23,15 @@ public class BusinessUnit
 
     private BusinessUnit() { }
 
-    public static BusinessUnit Create(string razaoSocial, string nomeFantasia, string cnpj)
+    public static BusinessUnit Create(string businessId, string razaoSocial, string nomeFantasia, string cnpj)
     {
+        if (string.IsNullOrWhiteSpace(businessId))
+            throw new DomainException("A BusinessUnit requires a Business (businessId).");
+
         var unit = new BusinessUnit
         {
             Id = Guid.NewGuid().ToString(),
+            BusinessId = businessId,
             RazaoSocial = razaoSocial,
             NomeFantasia = nomeFantasia,
             Cnpj = new Cnpj(cnpj),

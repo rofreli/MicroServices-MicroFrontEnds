@@ -15,6 +15,17 @@ public static class MongoDbClassMaps
         {
             if (_registered) return;
 
+            BsonClassMap.RegisterClassMap<Permission>(map =>
+            {
+                map.AutoMap();
+                map.MapMember(x => x.BusinessId);
+                map.MapMember(x => x.BusinessUnitId);
+                map.MapMember(x => x.Module);
+                map.MapMember(x => x.Function);
+                map.MapMember(x => x.Role);
+                map.SetIgnoreExtraElements(true);
+            });
+
             BsonClassMap.RegisterClassMap<User>(map =>
             {
                 map.AutoMap();
@@ -24,7 +35,8 @@ public static class MongoDbClassMaps
                 map.MapMember(x => x.LastName);
                 map.MapMember(x => x.PasswordHash);
                 map.MapMember(x => x.IsActive);
-                map.MapField("_roles").SetElementName("roles");
+                map.MapMember(x => x.IsSuperAdmin);
+                map.MapField("_permissions").SetElementName("permissions");
                 map.MapField("_externalProviders").SetElementName("externalProviders");
                 map.MapMember(x => x.CreatedAt);
                 map.MapMember(x => x.UpdatedAt);
