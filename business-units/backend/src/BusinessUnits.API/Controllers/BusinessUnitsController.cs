@@ -65,9 +65,11 @@ public class BusinessUnitsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Update(
         string id,
-        [FromBody] UpdateBusinessUnitCommand command, CancellationToken ct = default)
+        [FromBody] UpdateBusinessUnitBody body, CancellationToken ct = default)
     {
-        var result = await _mediator.Send(command with { Id = id }, ct);
+        var command = new UpdateBusinessUnitCommand(
+            id, body.RazaoSocial, body.NomeFantasia, body.Address, body.Contacts);
+        var result = await _mediator.Send(command, ct);
         return Ok(result);
     }
 
@@ -80,3 +82,11 @@ public class BusinessUnitsController : ControllerBase
         return NoContent();
     }
 }
+
+// The Id comes from the route; a dedicated body type keeps it out of model validation.
+public record UpdateBusinessUnitBody(
+    string RazaoSocial,
+    string NomeFantasia,
+    AddressInputDto? Address,
+    IReadOnlyList<ContactInputDto>? Contacts
+);

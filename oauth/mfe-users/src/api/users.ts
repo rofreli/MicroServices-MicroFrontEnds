@@ -1,5 +1,13 @@
 import { apiClient } from './client'
-import type { CreateUserPayload, PaginatedResult, UpdateUserPayload, User, UserSummary } from '../types/user'
+import type {
+  AddPermissionPayload,
+  CreateUserPayload,
+  PaginatedResult,
+  RemovePermissionPayload,
+  UpdateUserPayload,
+  User,
+  UserSummary,
+} from '../types/user'
 
 export const usersApi = {
   getAll: (page = 1, pageSize = 20) =>
@@ -20,9 +28,9 @@ export const usersApi = {
   activate: (id: string) =>
     apiClient.patch(`/users/${id}/activate`),
 
-  addRole: (id: string, role: string) =>
-    apiClient.post<User>(`/users/${id}/roles`, { role }).then(r => r.data),
+  addPermission: (id: string, payload: AddPermissionPayload) =>
+    apiClient.post<User>(`/users/${id}/permissions`, payload).then(r => r.data),
 
-  removeRole: (id: string, role: string) =>
-    apiClient.delete<User>(`/users/${id}/roles/${role}`).then(r => r.data),
+  removePermission: (id: string, payload: RemovePermissionPayload) =>
+    apiClient.delete<User>(`/users/${id}/permissions`, { data: payload }).then(r => r.data),
 }

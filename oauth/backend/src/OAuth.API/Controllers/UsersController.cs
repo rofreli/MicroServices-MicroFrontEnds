@@ -44,8 +44,9 @@ public class UsersController : ControllerBase
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
-        string id, [FromBody] UpdateUserCommand command, CancellationToken ct = default)
-        => Ok(await _mediator.Send(command with { Id = id }, ct));
+        string id, [FromBody] UpdateUserRequest request, CancellationToken ct = default)
+        => Ok(await _mediator.Send(
+            new UpdateUserCommand(id, request.FirstName, request.LastName), ct));
 
     [HttpPatch("{id}/deactivate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -84,6 +85,9 @@ public class UsersController : ControllerBase
             id, request.BusinessId, request.BusinessUnitId,
             request.Module, request.Function), ct));
 }
+
+// The Id comes from the route; a dedicated body type keeps it out of model validation.
+public record UpdateUserRequest(string FirstName, string LastName);
 
 public record AddPermissionRequest(
     string BusinessId,

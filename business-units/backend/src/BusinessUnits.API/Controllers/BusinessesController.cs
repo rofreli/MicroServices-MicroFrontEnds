@@ -49,8 +49,9 @@ public class BusinessesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
-        string id, [FromBody] UpdateBusinessCommand command, CancellationToken ct = default)
-        => Ok(await _mediator.Send(command with { Id = id }, ct));
+        string id, [FromBody] UpdateBusinessBody body, CancellationToken ct = default)
+        => Ok(await _mediator.Send(
+            new UpdateBusinessCommand(id, body.RazaoSocial, body.NomeFantasia), ct));
 
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -89,6 +90,9 @@ public class BusinessesController : ControllerBase
         return CreatedAtAction(nameof(GetBusinessUnits), new { businessId }, result);
     }
 }
+
+// The Id comes from the route; a dedicated body type keeps it out of model validation.
+public record UpdateBusinessBody(string RazaoSocial, string NomeFantasia);
 
 public record CreateBusinessUnitBody(
     string RazaoSocial,

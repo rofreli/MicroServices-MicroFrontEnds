@@ -109,7 +109,7 @@ export function UsersList() {
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50">
-                {['Usuário', 'E-mail', 'Roles', 'Status', 'Ações'].map((h) => (
+                {['Usuário', 'E-mail', 'Tipo', 'Status', 'Ações'].map((h) => (
                   <th
                     key={h}
                     className={`px-6 py-3.5 text-xs font-semibold text-neutral-500 uppercase tracking-wider ${h === 'Ações' ? 'text-right' : 'text-left'}`}
@@ -136,17 +136,15 @@ export function UsersList() {
                   </td>
                   <td className="px-6 py-4 text-sm text-neutral-500">{user.email}</td>
                   <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1.5">
-                      {user.roles.length === 0 ? (
-                        <span className="text-xs text-neutral-400">—</span>
-                      ) : (
-                        user.roles.map((r) => (
-                          <span key={r} className="rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
-                            {r}
-                          </span>
-                        ))
-                      )}
-                    </div>
+                    {user.isSuperAdmin ? (
+                      <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
+                        Super Admin
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600">
+                        Padrão
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${user.isActive ? 'bg-success-50 text-success-700' : 'bg-danger-50 text-danger-700'}`}>

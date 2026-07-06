@@ -59,7 +59,6 @@ export function UserEdit() {
           submitLabel="Salvar Alterações"
           showEmail={false}
           showPassword={false}
-          showRoles={false}
         />
       </div>
     </div>

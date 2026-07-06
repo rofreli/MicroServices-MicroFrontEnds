@@ -1,7 +1,21 @@
 # Skill: Criar Novo Microserviço
 
 Guia completo para adicionar um novo domínio ao monorepo `/home/rodrigo/pessoal/repos/`.
-Cada domínio tem um **backend .NET 8** e um **MFE React**. Exemplos de referência: `business-units/` e `oauth/`.
+Cada domínio tem um **backend .NET 10** e um **MFE React**. Exemplos de referência: `business-units/` e `oauth/`.
+
+> **Skills relacionadas** (em `.claude/skills/`):
+> - **`po`** — Product Owner crítico (agnóstico de produto): descoberta via Playwright MCP,
+>   perguntas certas, spec precisa e **Spec-Driven Development** (specs versionadas em
+>   `docs/specs/` dirigem arquitetura, implementação e verificação). Dossiê deste produto em
+>   `.claude/skills/po/products/business-suite.md`.
+> - **`arquitetura`** — especificação em nível de arquitetura: topologia, BFF como porta única,
+>   segurança (introspection/token relay), mapa de portas, decisões registradas e template de spec.
+> - **`qa`** — estratégia de testes: unitários, integração do BFF, e2e Playwright (journeys em
+>   `e2e/`) e exploratório via Playwright MCP.
+>
+> Fluxo de trabalho (Spec-Driven Development): **po** especifica → **arquitetura** planeja →
+> este arquivo (scaffolding) implementa → **qa** verifica **contra a spec**. Não se implementa
+> funcionalidade sem spec aprovada (skill `po` §5).
 
 ---
 
@@ -12,7 +26,7 @@ Cada domínio tem um **backend .NET 8** e um **MFE React**. Exemplos de referên
 ├── docker-compose.yml          ← orquestra todos os serviços
 ├── shell/                      ← Shell principal (host MFE)
 ├── <domain>/
-│   ├── backend/                ← API .NET 8
+│   ├── backend/                ← API .NET 10
 │   └── mfe-<domain>/           ← Micro-frontend React
 └── oauth/
     ├── backend/                ← OAuth server (não replicar)
@@ -21,7 +35,7 @@ Cada domínio tem um **backend .NET 8** e um **MFE React**. Exemplos de referên
 
 ---
 
-## Parte 1 — Backend .NET 8
+## Parte 1 — Backend .NET 10
 
 ### 1.1 Estrutura de projetos (Clean Architecture)
 
@@ -37,10 +51,10 @@ Criar solução:
 ```bash
 cd <domain>/backend
 dotnet new sln -n <Domain>
-dotnet new classlib -n <Domain>.Domain       -o src/<Domain>.Domain       --framework net8.0
-dotnet new classlib -n <Domain>.Application  -o src/<Domain>.Application  --framework net8.0
-dotnet new classlib -n <Domain>.Infrastructure -o src/<Domain>.Infrastructure --framework net8.0
-dotnet new webapi   -n <Domain>.API          -o src/<Domain>.API          --framework net8.0
+dotnet new classlib -n <Domain>.Domain       -o src/<Domain>.Domain       --framework net10.0
+dotnet new classlib -n <Domain>.Application  -o src/<Domain>.Application  --framework net10.0
+dotnet new classlib -n <Domain>.Infrastructure -o src/<Domain>.Infrastructure --framework net10.0
+dotnet new webapi   -n <Domain>.API          -o src/<Domain>.API          --framework net10.0
 dotnet sln add src/**/*.csproj
 ```
 
@@ -59,33 +73,33 @@ Domain       → (nenhuma)
 
 **`<Domain>.Application.csproj`**
 ```xml
-<PackageReference Include="MediatR" Version="12.2.0" />
-<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
-<PackageReference Include="FluentValidation" Version="11.9.2" />
-<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.2" />
-<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+<PackageReference Include="MediatR" Version="12.5.0" />
+<PackageReference Include="AutoMapper" Version="14.0.0" />
+<PackageReference Include="FluentValidation" Version="12.1.1" />
+<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
 ```
 
 **`<Domain>.Infrastructure.csproj`**
 ```xml
-<PackageReference Include="MongoDB.Driver" Version="2.27.0" />
-<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
-<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-<PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
-<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
+<PackageReference Include="MongoDB.Driver" Version="3.9.0" />
+<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
+<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.9" />
+<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.9" />
+<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
 ```
 
 **`<Domain>.API.csproj`**
 ```xml
-<PackageReference Include="MediatR" Version="12.2.0" />
-<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+<PackageReference Include="MediatR" Version="12.5.0" />
+<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
 ```
 
-> **ATENÇÃO — versões NuGet críticas:**
-> - `Microsoft.Extensions.Options.ConfigurationExtensions` **não tem versão 8.0.1** — usar `8.0.0`
-> - `Microsoft.Extensions.Configuration.Abstractions` **não tem versão 8.0.1** — usar `8.0.0`
-> - `Microsoft.Extensions.Options` e `DependencyInjection.Abstractions` **têm** versão `8.0.1`
-> - Se um pacote transitivo exigir versão maior, **nunca misturar major** (9.x com 8.x causa NU1605)
+> **ATENÇÃO — mudanças de major (net10 + libs atuais):**
+> - **AutoMapper 13+** absorveu `AutoMapper.Extensions.Microsoft.DependencyInjection` (descontinuado em 12.0.1) — referenciar só `AutoMapper` e registrar com `services.AddAutoMapper(cfg => cfg.AddMaps(assembly))`. Em testes: `new MapperConfiguration(cfg => cfg.AddMaps(assembly))`.
+> - **OpenIddict 6/7** renomeou o endpoint de logout para **EndSession** e `Userinfo`→`UserInfo`: `SetEndSessionEndpointUris`, `EnableEndSessionEndpointPassthrough`, `Permissions.Endpoints.EndSession`, `SetUserInfoEndpointUris`, `EnableUserInfoEndpointPassthrough`.
+> - **Swashbuckle 9/10** migrou para **Microsoft.OpenApi 2.0**: tipos saíram de `Microsoft.OpenApi.Models` para `Microsoft.OpenApi`; usar `new OpenApiSecurityScheme{...}` explícito, `AddSecurityRequirement(document => ...)` e `new OpenApiSecuritySchemeReference("Bearer", document, null)` com valor `new List<string>()`.
+> - **Licença comercial**: AutoMapper 15+, MediatR 13+ e FluentAssertions 8+ passaram a exigir licença comercial. Fixamos as **últimas versões livres**: **AutoMapper 14.0.0** (MIT), **MediatR 12.5.0** (Apache-2.0), **FluentAssertions 7.2.2** (Apache-2.0). Não subir esses majors sem licença.
 
 ### 1.4 Domain Layer
 
@@ -121,7 +135,9 @@ public class <Entity>
 
 **Coleções privadas** (padrão invariante):
 ```csharp
-private readonly List<Item> _items = new();
+// SEM readonly: o MapField do MongoDB precisa setar o backing field na desserialização.
+// Com readonly, serializa normalmente mas SEMPRE lê de volta vazio (falha silenciosa).
+private List<Item> _items = new();
 public IReadOnlyList<Item> Items => _items.AsReadOnly();
 ```
 
@@ -166,7 +182,7 @@ public static class DependencyInjection
     {
         services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddAutoMapper(typeof(DependencyInjection).Assembly);
+        services.AddAutoMapper(cfg => cfg.AddMaps(typeof(DependencyInjection).Assembly));
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         return services;
@@ -307,7 +323,17 @@ public class MongoDbContext
 
     private void EnsureIndexes()
     {
-        // Adicionar índices únicos aqui se necessário
+        // Best-effort: um índice pré-existente (ex.: nome antigo na mesma chave) NUNCA pode
+        // derrubar a API — o contexto é singleton e a exceção repetiria em toda request.
+        TryCreateIndex(() => <Entity>s.Indexes.CreateOne(new CreateIndexModel<<Entity>>(
+            Builders<<Entity>>.IndexKeys.Ascending("Campo"),
+            new CreateIndexOptions { Unique = true, Name = "idx_<entity>_campo_unique" })));
+    }
+
+    private static void TryCreateIndex(Action create)
+    {
+        try { create(); }
+        catch (MongoCommandException) { /* índice já existe (talvez com outro nome) — manter */ }
     }
 }
 ```
@@ -477,8 +503,8 @@ public class <Entity>sController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] Update<Entity>Command command, CancellationToken ct = default)
-        => Ok(await _mediator.Send(command with { Id = id }, ct));
+    public async Task<IActionResult> Update(string id, [FromBody] Update<Entity>Body body, CancellationToken ct = default)
+        => Ok(await _mediator.Send(new Update<Entity>Command(id, body.Field1, body.Field2), ct));
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
@@ -487,7 +513,15 @@ public class <Entity>sController : ControllerBase
         return NoContent();
     }
 }
+
+// O Id vem da ROTA; um record de body próprio o mantém fora da validação de modelo.
+public record Update<Entity>Body(string Field1, string Field2);
 ```
+
+> **CRÍTICO — PUT/PATCH:** nunca usar `[FromBody] Update<Entity>Command` com `command with
+> { Id = id }`. O construtor do record exige `Id`, o body do frontend (corretamente) não o envia,
+> e a validação automática do `[ApiController]` responde **400 "The Id field is required"** antes
+> do handler rodar — o update fica 100% quebrado. Sempre um record de body **sem `Id`**.
 
 **appsettings.json:**
 ```json
@@ -510,13 +544,13 @@ public class <Entity>sController : ControllerBase
 ### 1.8 Dockerfile do Backend
 
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY src/ .
 RUN dotnet restore <Domain>.API/<Domain>.API.csproj
 RUN dotnet publish <Domain>.API/<Domain>.API.csproj -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 8080
@@ -903,18 +937,16 @@ mfe-<domain>:
 
 ## Parte 4 — Checklist de portas
 
-| Serviço | Porta externa | Porta interna |
-|---------|--------------|---------------|
-| Shell | 3000 | 80 |
-| mfe-business-units | 3001 | 80 |
-| mfe-users | 3002 | 80 |
-| **Novo MFE** | **3003+** | **80** |
-| business-units-api | 5000 | 8080 |
-| oauth-api | 5001 | 8080 |
-| **Nova API** | **5002+** | **8080** |
-| business-units-mongo | 27017 | 27017 |
-| oauth-mongo | 27018 | 27017 |
-| **Novo Mongo** | **27019+** | **27017** |
+Mapa completo e regras de rede: **skill `arquitetura` §3**. Resumo para scaffolding:
+
+| Serviço | Porta host | Interna |
+|---------|-----------|---------|
+| **Novo MFE** | **3003+** | 80 |
+| **Nova API** | **nenhuma** — usar `expose: "8080"` (só o BFF a alcança) | 8080 |
+| **Novo Mongo** | 27019+ (dev only) | 27017 |
+
+> A **única API publicada no host é o BFF (5002)**. APIs de domínio novas entram no
+> `DownstreamOptions` do BFF e ganham rota no gateway — nunca `ports` no compose.
 
 ---
 
@@ -924,10 +956,91 @@ mfe-<domain>:
 |----------|---------|---------|
 | Router aninhado no MFE | `invariant Error` no Router | Remover `<MemoryRouter>` do `App.tsx`; manter só no `main.tsx` |
 | CORS no `/assets` do Nginx | `ERR_FAILED 200 (OK)` no `remoteEntry.js` | Repetir `add_header CORS` dentro do `location /assets` |
-| Pacote sem versão `8.0.1` | NU1603 / NU1605 cascadeando para `9.0.0` | Verificar NuGet; `ConfigurationExtensions` e `Configuration.Abstractions` ficam em `8.0.0` |
+| Pacotes `Microsoft.Extensions.*` desalinhados | NU1605 (downgrade) | Manter todos no mesmo major da TFM — `10.0.9` para net10 |
+| `AddAutoMapper(assembly)` no AutoMapper 13+ | CS1503 (espera `Action<IMapperConfigurationExpression>`) | `AddAutoMapper(cfg => cfg.AddMaps(assembly))` |
+| OpenIddict 6/7: `SetLogout*`/`Userinfo` | CS1061 / CS0117 | Renomear para `EndSession` e `UserInfo` (`SetEndSessionEndpointUris`, `Permissions.Endpoints.EndSession`, `SetUserInfoEndpointUris`) |
+| Swashbuckle 9/10 (Microsoft.OpenApi 2.0) | `Microsoft.OpenApi.Models` não existe / `IOpenApiSecurityScheme` abstrato | `using Microsoft.OpenApi;` + `new OpenApiSecurityScheme{...}`, `AddSecurityRequirement(doc => ...)`, `new OpenApiSecuritySchemeReference("Bearer", doc, null)` valor `new List<string>()` |
 | Controller herda `Controller` e tem classe `User` | CS1061 em `User.MétodoEstático()` | Alias: `using DomainUser = Namespace.User;` |
 | `Request.PathAndQuery` em ASP.NET Core | CS1061 | Usar `$"{Request.Path}{Request.QueryString}"` |
 | `IAsyncEnumerable.ToListAsync()` | CS1061 | Usar `await foreach` + `List<T>` manual |
 | MongoDB LINQ com value objects | Exceção em runtime | Usar `Builders<T>.Filter.Eq("Field", value)` |
 | `MapMember(x => x.ReadOnlyProp)` no BsonClassMap | Falha na desserialização silenciosa | Usar `MapField("_backingField")` |
 | `GetOpenIddictServerRequest()` não encontrado | CS1061 | `using Microsoft.AspNetCore;` (não `OpenIddict.Server.AspNetCore`) |
+| `[FromBody] Update...Command` com `Id` no record | PUT sempre 400 "The Id field is required" | Record de body **sem `Id`** (Id vem da rota) — ver template do controller |
+| Backing field `readonly` em coleção mapeada | grava no Mongo mas lê de volta vazio | Remover `readonly` do campo mapeado com `MapField` |
+| `EnsureIndexes` com índice legado (outro nome) | 500 em TODA request (contexto singleton) | `TryCreateIndex` com catch de `MongoCommandException` |
+
+> Armadilhas de **testes** (Mvc.Testing, stubs HTTP) → skill `qa` §6.
+> Armadilhas de **BFF/segurança** (JWE/introspection, issuer, YARP) → skill `arquitetura` §4–5.
+
+---
+
+## Parte 6 — BFF (Backend for Frontend / API Gateway)
+
+O **BFF** (`bff/backend/`) é a **única porta de entrada do sistema**: agrega dados dos domínios e
+faz gateway (YARP) de todo o resto — CRUD e fluxo OIDC — para serviços internos sem porta publicada.
+
+> **Especificação completa na skill `arquitetura`:** topologia (§1), regras de ouro (§2), rotas do
+> gateway e correções críticas do YARP/OpenIddict (§4), modelo de segurança — JWE, introspection
+> com audience `resource_server`, token relay, permissões (§5), fan-out/502 (§6) e decisões
+> registradas (§10). Aqui fica só o **how-to**.
+
+### 6.1 Estrutura (Ports & Adapters, 3 camadas — sem Domain)
+
+```
+bff/backend/src/
+├── Bff.Application/      ← portas (interfaces), modelos, handlers de agregação (MediatR)
+│   ├── Abstractions/     ← IBusinessCatalogApi, IUserDirectoryApi, ICurrentUser (ports)
+│   ├── Models/           ← DTOs de saída + Models/Upstream (espelho do JSON de cada domínio)
+│   ├── Common/           ← PagedResult<T>, exceções (NotFound/Forbidden/Upstream)
+│   └── Queries/          ← GetDashboard, GetBusinessOverview (handlers compõem os ports)
+├── Bff.Infrastructure/   ← adapters HTTP dos ports (typed HttpClient) + token relay
+│   ├── Clients/          ← BusinessCatalogApiClient, UserDirectoryApiClient
+│   ├── Http/             ← BearerTokenPropagationHandler (DelegatingHandler)
+│   └── Options/          ← DownstreamOptions (URLs dos domínios)
+└── Bff.API/              ← controllers finos, segurança, middleware
+    ├── Gateway/          ← GatewayConfig (rotas/clusters YARP montados do DownstreamOptions)
+    ├── Security/         ← CurrentUser (lê claims do token: is_super_admin, permissions)
+    └── Controllers/      ← DashboardController, BusinessOverviewController (agregações)
+```
+
+> **Princípio:** o BFF **fala HTTP + seus próprios modelos** — nunca referencia os assemblies
+> dos domínios.
+
+### 6.2 Adicionar uma nova agregação
+
+1. Estender a porta relevante em `Bff.Application/Abstractions` (ou criar uma nova para o domínio novo).
+2. Implementar o adapter HTTP em `Bff.Infrastructure/Clients` (typed client + `GetAsync<T>` com
+   tratamento 404 → `null` e erro → `UpstreamException`).
+3. Criar `Query` + `Handler` em `Bff.Application/Queries` compondo os ports.
+4. Criar um controller fino com `[Authorize]` (+ checagem de acesso se específico de um business).
+5. Registrar o novo `HttpClient` em `Bff.Infrastructure/DependencyInjection` com
+   `.AddHttpMessageHandler<BearerTokenPropagationHandler>()`.
+
+### 6.3 Pacotes do BFF
+
+**`Bff.API.csproj`**: `MediatR` 12.5.0, `Swashbuckle.AspNetCore` 10.2.3,
+`OpenIddict.Validation.AspNetCore` 7.5.0, `OpenIddict.Validation.SystemNetHttp` 7.5.0.
+**`Bff.Infrastructure.csproj`**: `Microsoft.Extensions.Http` 10.0.9 + `FrameworkReference Microsoft.AspNetCore.App`
+(para `IHttpContextAccessor` no token relay).
+
+### 6.4 docker-compose (serviço `bff-api`, porta 5002)
+
+URLs downstream via nome de serviço na rede (`http://business-units-api:8080`,
+`http://oauth-api:8080`); `OpenIddict__Issuer` deve casar o emissor do OAuth.
+
+---
+
+## Parte 7 — Testes
+
+Migrado para a **skill `qa`** (`.claude/skills/qa/SKILL.md`), que cobre:
+
+- Pirâmide de testes do repo (unitário, integração do BFF, e2e, smoke, exploratório) com comandos.
+- Padrões de teste unitário (domínio sem mocks; handlers com `Mock<IRepository>` + AutoMapper real).
+- Integração do BFF (`WebApplicationFactory` + `TestAuthHandler` + `StubHttpMessageHandler`).
+- Suíte e2e Playwright em `e2e/tests/journeys/` (convenções de seletores, dados únicos, auto-skip).
+- Testes exploratórios via Playwright MCP e armadilhas de QA.
+
+**Todo novo domínio deve nascer com:** testes de domínio + handlers em `<domain>/backend/tests/`
+e um journey e2e em `e2e/tests/journeys/<domain>.spec.ts` cobrindo criar → listar → detalhar →
+editar → excluir.

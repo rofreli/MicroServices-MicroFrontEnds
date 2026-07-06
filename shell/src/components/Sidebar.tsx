@@ -39,7 +39,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Visão Geral', path: '/', icon: <IconGrid /> },
-  { label: 'Unidades de Negócio', path: '/business-units', icon: <IconBuilding /> },
+  { label: 'Empresas', path: '/business-units', icon: <IconBuilding /> },
   { label: 'Usuários', path: '/users', icon: <IconUsers /> },
 ]
 

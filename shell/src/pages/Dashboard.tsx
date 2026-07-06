@@ -1,5 +1,15 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+
+// The BFF gateway is the single entry point (same host as the OIDC endpoints).
+const BFF_BASE = import.meta.env.VITE_OAUTH_URL ?? 'http://localhost:5002'
+
+interface DashboardCounts {
+  businessCount: number
+  businessUnitCount: number
+  userCount: number
+}
 
 function IconBuilding({ className }: { className?: string }) {
   return (
@@ -38,37 +48,43 @@ function IconArrowRight({ className }: { className?: string }) {
   )
 }
 
-const stats = [
-  {
-    title: 'Unidades de Negócio',
-    value: '—',
-    subtitle: 'Total cadastrado',
-    icon: <IconBuilding className="w-6 h-6" />,
-    bg: 'bg-primary-100',
-    color: 'text-primary-600',
-  },
-  {
-    title: 'Usuários',
-    value: '—',
-    subtitle: 'Contas registradas',
-    icon: <IconUsers className="w-6 h-6" />,
-    bg: 'bg-success-100',
-    color: 'text-success-700',
-  },
-  {
-    title: 'Autenticação',
-    value: 'OAuth 2.0',
-    subtitle: 'PKCE + Google SSO',
-    icon: <IconShield className="w-6 h-6" />,
-    bg: 'bg-warning-100',
-    color: 'text-warning-600',
-  },
-]
+function fmt(n: number | undefined): string {
+  return n === undefined ? '—' : String(n)
+}
+
+function buildStats(counts: DashboardCounts | null) {
+  return [
+    {
+      title: 'Empresas',
+      value: fmt(counts?.businessCount),
+      subtitle: 'Total cadastrado',
+      icon: <IconShield className="w-6 h-6" />,
+      bg: 'bg-warning-100',
+      color: 'text-warning-600',
+    },
+    {
+      title: 'Unidades de Negócio',
+      value: fmt(counts?.businessUnitCount),
+      subtitle: 'Total cadastrado',
+      icon: <IconBuilding className="w-6 h-6" />,
+      bg: 'bg-primary-100',
+      color: 'text-primary-600',
+    },
+    {
+      title: 'Usuários',
+      value: fmt(counts?.userCount),
+      subtitle: 'Contas registradas',
+      icon: <IconUsers className="w-6 h-6" />,
+      bg: 'bg-success-100',
+      color: 'text-success-700',
+    },
+  ]
+}
 
 const modules = [
   {
-    title: 'Unidades de Negócio',
-    description: 'Gerencie as unidades da empresa, incluindo contatos, endereços e CNPJ.',
+    title: 'Empresas',
+    description: 'Gerencie empresas e suas unidades de negócio (CNPJ, filiais).',
     path: '/business-units',
     icon: <IconBuilding className="w-7 h-7" />,
     bg: 'bg-primary-50',
@@ -85,9 +101,21 @@ const modules = [
 ]
 
 export function Dashboard() {
-  const { user } = useAuth()
+  const { user, accessToken } = useAuth()
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
+
+  const [counts, setCounts] = useState<DashboardCounts | null>(null)
+  useEffect(() => {
+    const token = accessToken ?? localStorage.getItem('access_token')
+    if (!token) return
+    fetch(`${BFF_BASE}/api/v1/dashboard`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setCounts(data))
+      .catch(() => {})
+  }, [accessToken])
+
+  const stats = buildStats(counts)
 
   return (
     <div className="space-y-8">

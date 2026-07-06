@@ -7,7 +7,8 @@ namespace BusinessUnits.Domain.Entities;
 public class BusinessUnit
 {
     private readonly List<IDomainEvent> _domainEvents = new();
-    private readonly List<Contact> _contacts = new();
+    // NOT readonly: MongoDB's MapField deserializer must be able to set this backing field.
+    private List<Contact> _contacts = new();
 
     public string Id { get; private set; }
     public string BusinessId { get; private set; } = string.Empty;

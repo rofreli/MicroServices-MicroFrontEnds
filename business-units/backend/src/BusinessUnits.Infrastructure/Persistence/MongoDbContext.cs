@@ -27,16 +27,30 @@ public class MongoDbContext
 
     private void EnsureIndexes()
     {
-        Businesses.Indexes.CreateOne(new CreateIndexModel<Business>(
+        // Best-effort: a pre-existing index (e.g. an older name on the same key from a
+        // previous schema) must never take the whole API down. Ignore conflicts.
+        TryCreateIndex(() => Businesses.Indexes.CreateOne(new CreateIndexModel<Business>(
             Builders<Business>.IndexKeys.Ascending("Cnpj"),
-            new CreateIndexOptions { Unique = true, Name = "idx_business_cnpj_unique" }));
+            new CreateIndexOptions { Unique = true, Name = "idx_business_cnpj_unique" })));
 
-        BusinessUnits.Indexes.CreateOne(new CreateIndexModel<BusinessUnit>(
+        TryCreateIndex(() => BusinessUnits.Indexes.CreateOne(new CreateIndexModel<BusinessUnit>(
             Builders<BusinessUnit>.IndexKeys.Ascending("Cnpj"),
-            new CreateIndexOptions { Unique = true, Name = "idx_bu_cnpj_unique" }));
+            new CreateIndexOptions { Unique = true, Name = "idx_bu_cnpj_unique" })));
 
-        BusinessUnits.Indexes.CreateOne(new CreateIndexModel<BusinessUnit>(
+        TryCreateIndex(() => BusinessUnits.Indexes.CreateOne(new CreateIndexModel<BusinessUnit>(
             Builders<BusinessUnit>.IndexKeys.Ascending(x => x.BusinessId),
-            new CreateIndexOptions { Name = "idx_bu_business_id" }));
+            new CreateIndexOptions { Name = "idx_bu_business_id" })));
+    }
+
+    private static void TryCreateIndex(Action create)
+    {
+        try
+        {
+            create();
+        }
+        catch (MongoCommandException)
+        {
+            // Index already exists (possibly under a different name/options) — leave it as is.
+        }
     }
 }

@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthContext'
 
 const BREADCRUMBS: Record<string, { parent?: string; title: string }> = {
   '/':               { title: 'Visão Geral' },
-  '/business-units': { parent: 'Módulos', title: 'Unidades de Negócio' },
+  '/business-units': { parent: 'Módulos', title: 'Empresas' },
   '/users':          { parent: 'Módulos', title: 'Usuários' },
 }
 
