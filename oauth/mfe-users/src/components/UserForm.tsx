@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form'
-import { AVAILABLE_ROLES, type CreateUserPayload } from '../types/user'
+import { type CreateUserPayload } from '../types/user'
 
 interface Props {
   defaultValues?: Partial<CreateUserPayload>
@@ -8,7 +8,6 @@ interface Props {
   submitLabel?: string
   showEmail?: boolean
   showPassword?: boolean
-  showRoles?: boolean
 }
 
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
@@ -30,7 +29,6 @@ export function UserForm({
   submitLabel = 'Salvar',
   showEmail = true,
   showPassword = true,
-  showRoles = true,
 }: Props) {
   const { register, handleSubmit, formState: { errors } } =
     useForm<CreateUserPayload>({ defaultValues })
@@ -98,28 +96,7 @@ export function UserForm({
         </div>
       </section>
 
-      {/* Roles */}
-      {showRoles && (
-        <section className="space-y-4">
-          <div className="border-b border-neutral-100 pb-3">
-            <h3 className="text-sm font-semibold text-neutral-900">Permissões</h3>
-            <p className="mt-0.5 text-xs text-neutral-500">Roles de acesso atribuídas ao usuário</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {AVAILABLE_ROLES.map((role) => (
-              <label key={role} className="flex items-center gap-2.5 cursor-pointer rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 hover:bg-neutral-100 transition-colors has-[:checked]:border-primary-300 has-[:checked]:bg-primary-50">
-                <input
-                  type="checkbox"
-                  value={role}
-                  {...register('roles')}
-                  className="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 focus:ring-offset-0"
-                />
-                <span className="text-sm font-medium text-neutral-700">{role}</span>
-              </label>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Permissões são geridas na tela de detalhe do usuário (por Empresa/Módulo). */}
 
       {/* Actions */}
       <div className="flex justify-end gap-3 pt-2 border-t border-neutral-200">

@@ -11,8 +11,10 @@ public class ExternalProvider
 
 public class User
 {
-    private readonly List<Permission> _permissions = new();
-    private readonly List<ExternalProvider> _externalProviders = new();
+    // NOT readonly: MongoDB's MapField deserializer must be able to set these backing
+    // fields when reading a document. A readonly field serializes fine but reads back empty.
+    private List<Permission> _permissions = new();
+    private List<ExternalProvider> _externalProviders = new();
 
     public string Id { get; private set; } = string.Empty;
     public Email Email { get; private set; } = null!;
@@ -64,6 +66,13 @@ public class User
     {
         FirstName = firstName;
         LastName = lastName;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetSuperAdmin(bool isSuperAdmin)
+    {
+        if (IsSuperAdmin == isSuperAdmin) return;
+        IsSuperAdmin = isSuperAdmin;
         UpdatedAt = DateTime.UtcNow;
     }
 

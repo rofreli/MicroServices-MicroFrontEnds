@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_OAUTH_API_URL ?? 'http://localhost:5001'
+// All calls go through the BFF gateway — never directly to the inner services.
+const API_BASE = import.meta.env.VITE_OAUTH_API_URL ?? 'http://localhost:5002'
 
 export const apiClient = axios.create({
   baseURL: `${API_BASE}/api/v1`,

@@ -22,6 +22,7 @@ public class OpenIddictSeeder : IHostedService
 
         await SeedScopesAsync(scopeManager, ct);
         await SeedSpaClientAsync(manager, ct);
+        await SeedBffClientAsync(manager, ct);
     }
 
     private static async Task SeedScopesAsync(IOpenIddictScopeManager manager, CancellationToken ct)
@@ -60,7 +61,7 @@ public class OpenIddictSeeder : IHostedService
             {
                 Permissions.Endpoints.Authorization,
                 Permissions.Endpoints.Token,
-                Permissions.Endpoints.Logout,
+                Permissions.Endpoints.EndSession,
                 Permissions.GrantTypes.AuthorizationCode,
                 Permissions.ResponseTypes.Code,
                 Permissions.Scopes.Email,
@@ -78,6 +79,26 @@ public class OpenIddictSeeder : IHostedService
         await manager.CreateAsync(descriptor, ct);
     }
 
+    // Confidential client used by the BFF to introspect access tokens. Because OpenIddict
+    // encrypts access tokens, downstream resource servers validate them via introspection
+    // rather than local JWT parsing.
+    private async Task SeedBffClientAsync(IOpenIddictApplicationManager manager, CancellationToken ct)
+    {
+        if (await manager.FindByClientIdAsync(_options.BffClientId, ct) is not null) return;
+
+        await manager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = _options.BffClientId,
+            ClientSecret = _options.BffClientSecret,
+            DisplayName = "Backend for Frontend",
+            ClientType = ClientTypes.Confidential,
+            Permissions =
+            {
+                Permissions.Endpoints.Introspection,
+            }
+        }, ct);
+    }
+
     public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
 }
 
@@ -85,4 +106,11 @@ public class OpenIddictSeederOptions
 {
     public List<string> SpaRedirectUris { get; set; } = new() { "http://localhost:3000/auth/callback" };
     public List<string> SpaPostLogoutUris { get; set; } = new() { "http://localhost:3000" };
+
+    // The BFF introspects access tokens as a confidential client. OpenIddict's introspection
+    // endpoint only returns a token as active if the calling client is one of the token's
+    // audiences. API tokens carry audience "resource_server" (the `api` scope's resource),
+    // so the introspecting client MUST be registered with that same id.
+    public string BffClientId { get; set; } = "resource_server";
+    public string BffClientSecret { get; set; } = "bff-secret";
 }

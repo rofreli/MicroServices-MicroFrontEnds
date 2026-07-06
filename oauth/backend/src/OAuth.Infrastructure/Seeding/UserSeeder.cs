@@ -32,7 +32,19 @@ public class UserSeeder : IHostedService
             var existing = await userRepository.GetByEmailAsync(seed.Email, ct);
             if (existing is not null)
             {
-                _logger.LogInformation("Seed user {Email} already exists, skipping.", seed.Email);
+                // Reconcile the super-admin flag for pre-existing seed users.
+                if (existing.IsSuperAdmin != seed.IsSuperAdmin)
+                {
+                    existing.SetSuperAdmin(seed.IsSuperAdmin);
+                    await userRepository.UpdateAsync(existing, ct);
+                    _logger.LogInformation(
+                        "Seed user {Email} super-admin flag reconciled to {IsSuperAdmin}.",
+                        seed.Email, seed.IsSuperAdmin);
+                }
+                else
+                {
+                    _logger.LogInformation("Seed user {Email} already exists, skipping.", seed.Email);
+                }
                 continue;
             }
 

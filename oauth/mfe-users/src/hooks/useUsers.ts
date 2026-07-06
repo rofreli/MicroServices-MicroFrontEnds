@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { usersApi } from '../api/users'
-import type { CreateUserPayload, UpdateUserPayload } from '../types/user'
+import type {
+  AddPermissionPayload,
+  CreateUserPayload,
+  RemovePermissionPayload,
+  UpdateUserPayload,
+} from '../types/user'
 
 const KEYS = {
   all: ['users'] as const,
@@ -59,18 +64,18 @@ export function useActivateUser() {
   })
 }
 
-export function useAddRole(id: string) {
+export function useAddPermission(id: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (role: string) => usersApi.addRole(id, role),
+    mutationFn: (payload: AddPermissionPayload) => usersApi.addPermission(id, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.detail(id) }),
   })
 }
 
-export function useRemoveRole(id: string) {
+export function useRemovePermission(id: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (role: string) => usersApi.removeRole(id, role),
+    mutationFn: (payload: RemovePermissionPayload) => usersApi.removePermission(id, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.detail(id) }),
   })
 }

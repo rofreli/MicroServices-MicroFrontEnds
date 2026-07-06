@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.OpenApi;
 using OAuth.API.Middleware;
 using OAuth.Application;
 using OAuth.Infrastructure;
@@ -19,6 +20,17 @@ builder.Services
         options.LoginPath = "/account/login";
         options.LogoutPath = "/account/logout";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
+
+        // Behind the BFF gateway the request Host is the internal service name
+        // (oauth-api:8080). The cookie handler builds ABSOLUTE redirect URLs from that
+        // host, which the browser cannot reach. Emit host-relative redirects instead so
+        // the browser follows them on the public gateway origin (localhost:5002).
+        static string ToRelative(string uri)
+            => Uri.TryCreate(uri, UriKind.Absolute, out var u) ? u.PathAndQuery : uri;
+
+        options.Events.OnRedirectToLogin = ctx => { ctx.Response.Redirect(ToRelative(ctx.RedirectUri)); return Task.CompletedTask; };
+        options.Events.OnRedirectToLogout = ctx => { ctx.Response.Redirect(ToRelative(ctx.RedirectUri)); return Task.CompletedTask; };
+        options.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.Redirect(ToRelative(ctx.RedirectUri)); return Task.CompletedTask; };
     })
     .AddCookie("ExternalCookie", options =>
     {
@@ -46,8 +58,8 @@ builder.Services.AddOpenIddict()
         options
             .SetAuthorizationEndpointUris("/connect/authorize")
             .SetTokenEndpointUris("/connect/token")
-            .SetUserinfoEndpointUris("/connect/userinfo")
-            .SetLogoutEndpointUris("/connect/logout")
+            .SetUserInfoEndpointUris("/connect/userinfo")
+            .SetEndSessionEndpointUris("/connect/logout")
             .SetIntrospectionEndpointUris("/connect/introspect");
 
         options
@@ -73,8 +85,8 @@ builder.Services.AddOpenIddict()
         options.UseAspNetCore()
             .EnableAuthorizationEndpointPassthrough()
             .EnableTokenEndpointPassthrough()
-            .EnableUserinfoEndpointPassthrough()
-            .EnableLogoutEndpointPassthrough()
+            .EnableUserInfoEndpointPassthrough()
+            .EnableEndSessionEndpointPassthrough()
             .DisableTransportSecurityRequirement(); // remove in production (HTTPS only)
     })
     .AddValidation(options =>
@@ -89,17 +101,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "OAuth API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new()
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
+        In = ParameterLocation.Header,
     });
-    c.AddSecurityRequirement(new()
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
         {
-            new() { Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" } },
-            Array.Empty<string>()
+            new OpenApiSecuritySchemeReference("Bearer", document, null),
+            new List<string>()
         }
     });
 });

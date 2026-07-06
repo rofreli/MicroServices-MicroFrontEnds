@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { generateCodeChallenge, generateCodeVerifier, generateState } from './pkce'
 
-const OAUTH_BASE = import.meta.env.VITE_OAUTH_URL ?? 'http://localhost:5001'
+// The OIDC flow is fronted by the BFF gateway (single entry point); the OAuth server
+// itself is not published. /connect/* is proxied to the OAuth server by the BFF.
+const OAUTH_BASE = import.meta.env.VITE_OAUTH_URL ?? 'http://localhost:5002'
 const CLIENT_ID = 'spa'
 const REDIRECT_URI = `${window.location.origin}/auth/callback`
 const SCOPES = 'openid profile email roles api'
@@ -61,7 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     sessionStorage.setItem('pkce_verifier', verifier)
     sessionStorage.setItem('oauth_state', state)
-    sessionStorage.setItem('redirect_after_login', window.location.pathname)
+    // Remember where to return after login, but never the auth routes themselves —
+    // otherwise we'd land back on /login (which re-triggers the flow) after signing in.
+    const { pathname, search } = window.location
+    const isAuthRoute = pathname === '/login' || pathname.startsWith('/auth/')
+    sessionStorage.setItem('redirect_after_login', isAuthRoute ? '/' : pathname + search)
 
     const params = new URLSearchParams({
       response_type: 'code',
@@ -116,8 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
-    setState({ user: null, accessToken: null, isLoading: false, isAuthenticated: false })
 
+    // Do NOT setState here: flipping to unauthenticated re-renders the app, which sends
+    // ProtectedRoute -> /login -> login() -> /connect/authorize and aborts the
+    // /connect/logout navigation below (leaving the OAuth cookie alive -> silent re-login).
+    // The full-page redirect to /connect/logout clears the session and returns to origin,
+    // where the app reloads with no token and shows the login screen.
     const params = new URLSearchParams({
       client_id: CLIENT_ID,
       post_logout_redirect_uri: window.location.origin,

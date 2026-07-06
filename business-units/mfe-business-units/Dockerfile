@@ -1,5 +1,8 @@
 FROM node:20-alpine AS build
 WORKDIR /app
+# Base URL of the BFF gateway (the only backend the browser talks to).
+ARG VITE_API_URL=http://localhost:5002
+ENV VITE_API_URL=$VITE_API_URL
 COPY package*.json ./
 RUN npm ci
 COPY . .

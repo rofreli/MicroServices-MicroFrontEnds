@@ -94,7 +94,8 @@ yarn-error.log*
 *.log
 logs/
 **/logs/
-
+**/.playwright-mcp
+**/.playwright-mcp/**
 # ══════════════════════════════════════════════════════════════════
 # Claude Code — local-only settings (machine-specific permissions)
 # .claude/settings.json (project-level) CAN be tracked if desired

@@ -8,7 +8,7 @@ services:
       args:
         VITE_MFE_BUSINESS_UNITS_URL: http://localhost:3001
         VITE_MFE_USERS_URL: http://localhost:3002
-        VITE_OAUTH_URL: http://localhost:5001
+        VITE_OAUTH_URL: http://localhost:5002
     container_name: platform-shell
     ports:
       - "3000:80"
@@ -25,14 +25,14 @@ services:
       context: ./business-units/backend
       dockerfile: src/BusinessUnits.API/Dockerfile
     container_name: business-units-api
-    ports:
-      - "5000:8080"
+    # No published ports: this inner service is reachable ONLY through the BFF gateway
+    # on the private network. Nothing on the host can call it directly.
+    expose:
+      - "8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       MongoDb__ConnectionString: mongodb://business-units-mongo:27017
       MongoDb__DatabaseName: BusinessUnitsDb
-      Cors__Origins__0: http://localhost:3000
-      Cors__Origins__1: http://localhost:3001
     depends_on:
       business-units-mongo:
         condition: service_healthy
@@ -76,6 +76,8 @@ services:
     build:
       context: ./business-units/mfe-business-units
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5002
     container_name: bu-mfe-business-units
     ports:
       - "3001:80"
@@ -89,8 +91,10 @@ services:
       context: ./oauth/backend
       dockerfile: src/OAuth.API/Dockerfile
     container_name: oauth-api
-    ports:
-      - "5001:8080"
+    # No published ports: the OAuth server is reached only via the BFF gateway, which
+    # proxies /connect and /account. Its /api/v1/users management API is never exposed.
+    expose:
+      - "8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       MongoDb__ConnectionString: mongodb://oauth-mongo:27017
@@ -100,7 +104,6 @@ services:
       OpenIddict__Seeder__SpaRedirectUris__0: http://localhost:3000/auth/callback
       OpenIddict__Seeder__SpaPostLogoutUris__0: http://localhost:3000
       Cors__Origins__0: http://localhost:3000
-      Cors__Origins__1: http://localhost:3002
     depends_on:
       oauth-mongo:
         condition: service_healthy
@@ -144,9 +147,45 @@ services:
     build:
       context: ./oauth/mfe-users
       dockerfile: Dockerfile
+      args:
+        VITE_OAUTH_API_URL: http://localhost:5002
     container_name: oauth-mfe-users
     ports:
       - "3002:80"
+    networks:
+      - platform-net
+    restart: unless-stopped
+
+  # ── BFF — single entry point / API gateway ──────────────────────────────────
+  # The ONLY published backend. Fronts every call: aggregations, the domain data
+  # APIs (proxied under /api/v1/**, auth enforced) and the OIDC surface (/connect,
+  # /account). The inner services have no host-published ports.
+  bff-api:
+    build:
+      context: ./bff/backend
+      dockerfile: src/Bff.API/Dockerfile
+    container_name: bff-api
+    ports:
+      - "5002:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Inner services (private network) — used by both the aggregation clients and
+      # the reverse-proxy clusters.
+      Downstream__BusinessUnitsApi: http://business-units-api:8080
+      Downstream__OAuthApi: http://oauth-api:8080
+      # Token validation via OpenIddict introspection against the OAuth server.
+      # The issuer matches the `iss` the OAuth server mints behind the proxy
+      # (YARP rewrites Host to oauth-api:8080).
+      OpenIddict__Issuer: http://oauth-api:8080/
+      OpenIddict__Audience: resource_server
+      OpenIddict__ClientId: resource_server
+      OpenIddict__ClientSecret: bff-secret
+      Cors__Origins__0: http://localhost:3000
+      Cors__Origins__1: http://localhost:3001
+      Cors__Origins__2: http://localhost:3002
+    depends_on:
+      - business-units-api
+      - oauth-api
     networks:
       - platform-net
     restart: unless-stopped
